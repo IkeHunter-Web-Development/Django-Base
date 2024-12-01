@@ -1,0 +1,37 @@
+{
+  "editor.tabSize": 4,
+  "python.analysis.typeCheckingMode": "off",
+  "python.analysis.autoImportCompletions": true,
+  "python.analysis.inlayHints.callArgumentNames": "off",
+  "flake8.args": ["--config=setup.cfg"],
+  "python.autoComplete.extraPaths": ["app"],
+  "python.analysis.extraPaths": ["app"],
+  "python.analysis.packageIndexDepths": [
+    {
+      "name": "rest_framework",
+      "depth": 3,
+      "includeAllSymbols": true
+    },
+    {
+      "name": "django",
+      "depth": 5,
+      "includeAllSymbols": true
+    },
+    {
+      "name": "sendgrid",
+      "depth": 3,
+      "includeAllSymbols": true
+    },
+  ],
+  "[python]": {
+    "editor.defaultFormatter": "ms-python.black-formatter",
+
+    "editor.codeActionsOnSave": {
+      "source.organizeImports": "explicit",
+      "source.unusedImports": "explicit",
+      "source.fixAll": "explicit"
+    }
+  },
+
+  // "flake8.ignorePatterns": ["migrations/*"]
+}

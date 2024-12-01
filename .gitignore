@@ -1,3 +1,8 @@
+# Custom
+
+_deprecated/
+_*/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

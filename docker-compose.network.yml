@@ -1,0 +1,62 @@
+services:
+  app:
+    build:
+      context: .
+      args:
+        - DEV=true
+    container_name: NAME-network-app
+    ports:
+      - '8000:8000'
+    volumes:
+      - ./app:/app
+      - NAME-static:/vol/static
+    command: >
+      sh -c "python manage.py wait_for_db &&
+             python manage.py migrate &&
+             python manage.py init_superuser &&
+             entrypoint.sh"
+    # env_file:
+    #   - .env
+    environment:
+      - PORT=9000
+      - DJANGO_ENV=dev
+      - DB_HOST=NAME-network-db
+      - DB_NAME=devdatabase
+      - DB_USER=devuser
+      - DB_PASS=devpass
+      - DEBUG=1
+      - DJANGO_ALLOWED_HOSTS=*
+      - S3_STORAGE_BACKEND=0
+      - CREATE_SUPERUSER=1
+      - DJANGO_SUPERUSER_EMAIL=${DJANGO_SUPERUSER_EMAIL:-admin@example.com}
+      - DJANGO_SUPERUSER_PASS=${DJANGO_SUPERUSER_PASS:-changeme}
+    depends_on:
+      - postgres
+    networks:
+      - cluster
+
+  postgres:
+    image: postgres:13-alpine
+    container_name: NAME-network-db
+    volumes:
+      - postgres-NAME-network:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=devdatabase
+      - POSTGRES_USER=devuser
+      - POSTGRES_PASSWORD=devpass
+    networks:
+      - cluster
+
+volumes:
+  postgres-NAME-network:
+  club-static:
+    name: club-static
+    external: true
+  # api-spec:
+  #   name: api-spec
+  #   external: true
+
+networks:
+  cluster:
+    name: NAME_cluster
+    external: true
