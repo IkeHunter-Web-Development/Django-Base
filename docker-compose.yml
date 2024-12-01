@@ -4,11 +4,13 @@ services:
       context: .
       args:
         - DEV=true
-    container_name: NAME-app
+    container_name: __NAME__-dev-app
+    restart: unless-stopped
     ports:
       - '8000:8000'
     volumes:
       - ./app:/app
+      - static-__NAME__-dev:/vol/static
     command: >
       sh -c "python manage.py wait_for_db &&
              python manage.py migrate &&
@@ -17,7 +19,7 @@ services:
 
     environment:
       - DJANGO_ENV=dev
-      - DB_HOST=NAME-dev-db
+      - DB_HOST=__NAME__-dev-db
       - DB_NAME=devdatabase
       - DB_USER=devuser
       - DB_PASS=devpass
@@ -27,16 +29,14 @@ services:
       - CREATE_SUPERUSER=1
       - DJANGO_SUPERUSER_EMAIL=${DJANGO_SUPERUSER_EMAIL:-admin@example.com}
       - DJANGO_SUPERUSER_PASS=${DJANGO_SUPERUSER_PASS:-changeme}
-      - EMAIL_HOST_USER=${EMAIL_HOST_USER}
-      - EMAIL_HOST_PASS=${EMAIL_HOST_PASS}
     depends_on:
       - postgres
 
   postgres:
     image: postgres:13-alpine
-    container_name: NAME-dev-db
+    container_name: __NAME__-dev-db
     volumes:
-      - postgres-NAME-dev:/var/lib/postgresql/data
+      - postgres-__NAME__-dev:/var/lib/postgresql/data
     environment:
       - POSTGRES_DB=devdatabase
       - POSTGRES_USER=devuser
@@ -50,4 +50,5 @@ services:
       - ./app/htmlcov:/usr/share/nginx/html
 
 volumes:
-  postgres-NAME-dev:
+  postgres-__NAME__-dev:
+  static-__NAME__-dev:

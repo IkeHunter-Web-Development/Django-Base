@@ -3,5 +3,5 @@
 Replace name in docker compose files with "example-name":
 
 ```sh
-sed -i '' 's/NAME/example-name/g' docker-compose*.yml
+sed -i '' 's/__NAME__/example-name/g' docker-compose*.yml
 ```

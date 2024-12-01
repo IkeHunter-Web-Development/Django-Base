@@ -5,6 +5,7 @@ services:
       dockerfile: ./Dockerfile
       args:
         - DEV=true
+    container_name: __NAME__-debug-app
     command: >
       sh -c "pip install debugpy -t /tmp &&
              python manage.py wait_for_db &&
@@ -18,7 +19,7 @@ services:
       - ./app:/app
     environment:
       - DJANGO_ENV=dev
-      - DB_HOST=NAME-debug-db
+      - DB_HOST=__NAME__-debug-db
       - DB_NAME=devdb
       - DB_USER=devuser
       - DB_PASS=devpass
@@ -30,7 +31,8 @@ services:
       - DJANGO_SUPERUSER_PASS=${DJANGO_SUPERUSER_PASS:-changeme}
       - EMAIL_HOST_USER=${EMAIL_HOST_USER}
       - EMAIL_HOST_PASS=${EMAIL_HOST_PASS}
-
+      
+      # Disable celery
       - SYS_CELERY_ENABLED=0
 
     depends_on:
@@ -38,14 +40,13 @@ services:
 
   postgres:
     image: postgres:13-alpine
-    container_name: NAME-debug-db
+    container_name: __NAME__-debug-db
     volumes:
-      - gef-postgres:/var/lib/postgresql/data
+      - postgres-__NAME__-debug:/var/lib/postgresql/data
     environment:
       - POSTGRES_DB=devdb
       - POSTGRES_USER=devuser
       - POSTGRES_PASSWORD=devpass
 
 volumes:
-  gef-postgres:
-    name: NAME-debug-db
+  postgres-__NAME__-debug:
