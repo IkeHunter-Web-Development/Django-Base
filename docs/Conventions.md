@@ -2,6 +2,9 @@
 
 - App names are **plural**
 - Model names are **singular**
+- API viewsets go in `viewsets.py`
+- Functional views go in `views.py`
+- Services go in `services.py`
 
 ## Doc Strings
 

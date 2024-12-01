@@ -15,8 +15,27 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path
+from django.urls import include, path
+from django.views.generic import RedirectView
+from drf_spectacular.views import (
+    SpectacularAPIView,
+    SpectacularSwaggerView,
+)
+
+from app.settings import DEBUG
 
 urlpatterns = [
     path("admin/", admin.site.urls),
+    path("api/docs/", RedirectView.as_view(url="/api/v1/docs/"), name="api-docs-base"),
+    path("api/v1/schema/club-manager", SpectacularAPIView.as_view(), name="api-schema"),
+    path(
+        "api/v1/docs/",
+        SpectacularSwaggerView.as_view(url_name="api-schema"),
+        name="api-docs",
+    ),
 ]
+
+if DEBUG:
+    urlpatterns.append(
+        path("__reload__/", include("django_browser_reload.urls")),
+    )
