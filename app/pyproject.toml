@@ -27,7 +27,7 @@ exclude = [
 ]
 
 [tool.coverage.run]
-source = '.'
+source = ['.']
 branch = true
 
 [tool.coverage.report]
