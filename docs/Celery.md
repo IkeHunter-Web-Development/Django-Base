@@ -128,7 +128,7 @@
        - static-__NAME__-dev:/vol/web
      depends_on:
        - redis
-       - db
+       - postgres
        - celery
      environment:
        - DEBUG=1
