@@ -25,7 +25,11 @@ services:
       - DB_PASS=devpass
       - DEBUG=1
       - DJANGO_ALLOWED_HOSTS=*
+      - CSRF_TRUSTED_ORIGINS=http://localhost:8000
+      
       - S3_STORAGE_BACKEND=0
+      - AWS_EXECUTION_ENV=0
+      
       - CREATE_SUPERUSER=1
       - DJANGO_SUPERUSER_EMAIL=${DJANGO_SUPERUSER_EMAIL:-admin@example.com}
       - DJANGO_SUPERUSER_PASS=${DJANGO_SUPERUSER_PASS:-changeme}

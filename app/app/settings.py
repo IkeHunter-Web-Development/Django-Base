@@ -19,6 +19,14 @@ import sys
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
+def environ_bool(key: str, default=0):
+    return bool(int(os.environ.get(key, default)))
+
+
+def environ_list(key: str, default=""):
+    return [item.strip() for item in filter(None, os.environ.get(key, default).split(","))]
+
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
@@ -26,18 +34,23 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "django-insecure-changeme")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = bool(int(os.environ.get("DEBUG", 0)))
+DEBUG = environ_bool("DEBUG", 0)
+"""Debug mode implements better logging."""
+
+DEV = environ_bool("DEV") or os.environ.get("DJANGO_ENV", "") == "dev"
+"""Dev mode installs additional development packages."""
+
 TESTING = sys.argv[1:2] == ["test"]
+"""Dev mode mocks all data."""
 
 ALLOWED_HOSTS = []
-ALLOWED_HOSTS.extend(
-    filter(None, os.environ.get("DJANGO_ALLOWED_HOSTS", "").split(","))
-)
+ALLOWED_HOSTS.extend(filter(None, os.environ.get("DJANGO_ALLOWED_HOSTS", "").split(",")))
+
+BASE_URL = os.environ.get("DJANGO_BASE_URL", "")
+ALLOWED_HOSTS.extend([BASE_URL])
 
 if os.environ.get("AWS_EXECUTION_ENV"):
     ALLOWED_HOSTS.append(gethostbyname(gethostname()))
-
-CSRF_TRUSTED_ORIGINS = [host for host in ALLOWED_HOSTS if host.startswith("http")]
 
 # Application definition
 
@@ -66,16 +79,6 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
-if DEBUG:
-    CSRF_TRUSTED_ORIGINS.extend(["http://0.0.0.0"])
-    INSTALLED_APPS.append("debug_toolbar")
-    INSTALLED_APPS.append("django_browser_reload")
-    MIDDLEWARE.append("debug_toolbar.middleware.DebugToolbarMiddleware")
-    MIDDLEWARE.append("django_browser_reload.middleware.BrowserReloadMiddleware")
-    INTERNAL_IPS = [
-        "127.0.0.1",
-    ]
-    CORS_ORIGIN_ALLOW_ALL = True
 
 ROOT_URLCONF = "app.urls"
 
@@ -165,6 +168,7 @@ STATIC_ROOT = "/vol/static/static"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
+
 # Django Rest Framework
 REST_FRAMEWORK = {
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
@@ -178,7 +182,9 @@ SPECTACULAR_SETTINGS = {
     "VERSION": "1.0.0",
 }
 
-# AWS S3 Config
+########################
+# ==  AWS S3 Config == #
+########################
 S3_STORAGE_BACKEND = bool(int(os.environ.get("S3_STORAGE_BACKEND", 1)))
 if S3_STORAGE_BACKEND is True:
     DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
@@ -187,3 +193,65 @@ AWS_DEFAULT_ACL = "public-read"
 AWS_STORAGE_BUCKET_NAME = os.environ.get("S3_STORAGE_BUCKET_NAME", "")
 AWS_S3_REGION_NAME = os.environ.get("S3_STORAGE_BUCKET_REGION", "us-east-1")
 AWS_QUERYSTRING_AUTH = False
+
+###############################
+# == Auth & Session Config == #
+###############################
+
+# Allows handling csrf and session cookies in external requests
+CSRF_COOKIE_SAMESITE = "Lax"
+SESSION_COOKIE_SAMESITE = "Lax"
+
+# Prevent csrf and session cookies from being set by JS
+CSRF_COOKIE_HTTPONLY = False
+SESSION_COOKIE_HTTPONLY = False
+
+# Only allow cookies from these origins
+CSRF_TRUSTED_ORIGINS = environ_list("CSRF_TRUSTED_ORIGINS")
+CSRF_TRUSTED_ORIGINS.extend([BASE_URL])
+
+# Only allow cookies to be sent over HTTPS
+CSRF_COOKIE_SECURE = environ_bool("CSRF_COOKIE_SECURE", True)
+SESSION_COOKIE_SECURE = environ_bool("SESSION_COOKIE_SECURE", True)
+
+# CORS Settings
+CORS_ALLOWED_ORIGINS = CSRF_TRUSTED_ORIGINS
+CORS_EXPOSE_HEADERS = ["Content-Type", "X-CSRFToken"]
+CORS_ALLOW_CREDENTIALS = True
+
+
+if DEBUG:
+    CSRF_TRUSTED_ORIGINS.extend(["http://0.0.0.0"])
+    INSTALLED_APPS.append("debug_toolbar")
+    INSTALLED_APPS.append("django_browser_reload")
+    MIDDLEWARE.append("debug_toolbar.middleware.DebugToolbarMiddleware")
+    MIDDLEWARE.append("django_browser_reload.middleware.BrowserReloadMiddleware")
+    INTERNAL_IPS = [
+        "127.0.0.1",
+    ]
+    CORS_ORIGIN_ALLOW_ALL = True
+
+###############################
+# == Environment Overrides == #
+###############################
+
+if DEV:
+    import socket
+
+    INSTALLED_APPS.append("django_browser_reload")
+    INSTALLED_APPS.append("debug_toolbar")
+    INSTALLED_APPS.append("django_extensions")
+
+    MIDDLEWARE.append("debug_toolbar.middleware.DebugToolbarMiddleware")
+    MIDDLEWARE.append("django_browser_reload.middleware.BrowserReloadMiddleware")
+    CSRF_TRUSTED_ORIGINS.extend(["http://0.0.0.0"])
+
+    INTERNAL_IPS = [
+        "127.0.0.1",
+        "10.0.2.2",
+    ]
+    hostname, _, ips = socket.gethostbyname_ex(socket.gethostname())
+    INTERNAL_IPS += [".".join(ip.split(".")[:-1] + ["1"]) for ip in ips]
+
+if DEBUG:
+    CSRF_TRUSTED_ORIGINS.extend(["http://0.0.0.0"])
